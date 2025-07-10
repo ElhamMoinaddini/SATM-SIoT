@@ -20,8 +20,6 @@ from selection_multipleDeploys import BroadPath,CloudPath_RR
 from placement_Cluster_Edge import CloudPlacement,FogPlacement
 lists = [] 
  
-
-
 ACCList1=[]
 """
 AttType can be one of the Attack types:
@@ -262,16 +260,13 @@ def create_application(NumOfFog,numOfDevicePerFog):
             a.add_service_module(f"Device{idx+1,idm+1}", Sm_SendServer, Sm_Trans, fractional_selectivity, threshold=1.0)
             a.add_service_module(f"Fog{idx+1}", Sm_Trans)
             a.add_service_module("Cloud", Sm_SendLModel)
-            
-    
+      
     return a
-    
-   
+       
 def create_json_topology(NumOfFog,numOfDevicePerFog):
     """
        TOPOLOGY DEFINITION
        """
-
     # CLOUD Abstraction
     
     topology_json = {}
@@ -322,15 +317,14 @@ def create_json_topology(NumOfFog,numOfDevicePerFog):
             i+=1      
                         
     return topology_json
-def main(simulated_time,depth,police):
-       
+def main(simulated_time,police,NumOfFog,Max_numOfDevicePerFog):
+        
+        depth=2
         folder_path = "."  # Current folder path
         for filename in os.listdir(folder_path):
             if filename.startswith("global_model"):
                 file_path = os.path.join(folder_path, filename)
                 os.remove(file_path)
-                
-        
                 
         folder_path = "."  # Current folder path
         for filename in os.listdir(folder_path):
@@ -341,17 +335,14 @@ def main(simulated_time,depth,police):
             if filename.startswith("model"):
                 file_path = os.path.join(folder_path, filename)
                 os.remove(file_path)
-        
-                
+
         folder_results = Path("results/")
         folder_results.mkdir(parents=True, exist_ok=True)
         folder_results = str(folder_results)+"/"
 
-         
-        NumOfFog =4
         NoRecrds = [[] for _ in range(NumOfFog)]
         
-        Max_numOfDevicePerFog =5  
+         
         # Thus, this variable is used in the population algorithm
         # In YAFS simulator, entities representing mobiles devices (sensors or actuactors) are not necessary because they are simple "abstract" links to the  access points
         # in any case, they can be implemented with node entities with no capacity to execute services.
@@ -446,22 +437,14 @@ def main(simulated_time,depth,police):
         s.print_debug_assignaments()
         # s.draw_allocated_topology() # for debugging
         print("number of fogs=",len(lists))
-        
-        
-        
-          
+         
         with open("ACCList.csv", "w") as f:
           writer = csv.writer(f, lineterminator='\n')
           writer.writerows(ACCList1)  
-        
-          
-        
+                
         result_list=[]
         for nested_list in lists:
             result_list.append( [[sublist[-2], sublist[-1]] for sublist in nested_list])
-        
-        
-
 if __name__ == '__main__':
         import logging.config
         import os
@@ -475,29 +458,38 @@ if __name__ == '__main__':
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-t", "--time", help="Simulated time ")
-        parser.add_argument("-d", "--depth", help="Depths ")
         parser.add_argument("-p", "--police", help="Cloud or edge ")
+        parser.add_argument("-nf", "--NumOfFog", help="Number Of Fog nodes")
+        parser.add_argument("-nd", "--Max_numOfDevicePerFog", help="Max_number of Device Per Fog node")
         args = parser.parse_args()
 
         if not args.time:
-            stop_time =1100
+            stop_time =1000
         else:
             stop_time = int(args.time)
+            
 
         start_time = time.time()
-        if not args.depth:
-            dep  = 2
-        else:
-            dep = int(args.depth)
+        
+           
 
         if not args.police:
             police = "edge"
         else:
             police = str(args.police)
+            
+            
+        if not args.NumOfFog:
+            NumOfFog =4
+        else:
+            NumOfFog = int(args.time)    
 
-        #police ="cloud"
-        main(stop_time,dep,police)
-        s = Stats(defaultPath=folder_results+"Results_%s_%s_%s" % (police, stop_time, dep))
-        #print("%f," %(s.valueLoop(stop_time, time_loops=time_loops)))
 
+        if not args.Max_numOfDevicePerFog:
+            Max_numOfDevicePerFog =5
+        else:
+            Max_numOfDevicePerFog = int(args.time) 
+            
+        
+        main(stop_time,police,NumOfFog,Max_numOfDevicePerFog)
         print("\n--- %s seconds ---" % (time.time() - start_time))
